@@ -122,6 +122,7 @@
     <button id="sample-btn">sample</button>
     <button id="clear-btn">clear</button>
     <button id="copy-btn">copy</button>
+    <button id="save-btn">save as</button>
     <button id="despace-btn" class="primary">despace</button>
   </div>
 </header>
@@ -134,6 +135,7 @@
   const copyBtn = document.getElementById('copy-btn');
   const clearBtn = document.getElementById('clear-btn');
   const sampleBtn = document.getElementById('sample-btn');
+  const saveBtn = document.getElementById('save-btn');
 
   const SAMPLE = `Deployment Summary
   Service: api-gateway v2.4.1
@@ -212,6 +214,30 @@
   clearBtn.addEventListener('click', () => {
     input.value = '';
     input.focus();
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    if (!input.value) return;
+    const filename = `despaced-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.txt`;
+
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'Text file', accept: { 'text/plain': ['.txt', '.md'] } }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(input.value);
+        await writable.close();
+      } catch (_) { /* cancelled */ }
+    } else {
+      const blob = new Blob([input.value], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
   });
 
   copyBtn.addEventListener('click', () => {
